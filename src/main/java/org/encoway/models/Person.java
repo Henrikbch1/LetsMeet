@@ -8,7 +8,7 @@ public record Person(
         String firstName,
         String street,
         String streetNumber,
-        String zipCode,
+        Integer cityId,
         String phoneNumber,
         String email,
         Integer genderId,

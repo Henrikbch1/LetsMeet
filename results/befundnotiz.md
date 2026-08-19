@@ -5,8 +5,9 @@
 ```mermaid
 erDiagram
     CITY {
-        varchar zip_code PK
-        varchar city_name "NOT NULL"
+        int city_id PK
+        varchar zip_code "NOT NULL"
+        varchar city_name "UNIQUE (zip_code, city_name), NOT NULL"
     }
 
     GENDER {
@@ -20,7 +21,7 @@ erDiagram
         varchar first_name "NOT NULL"
         varchar street
         varchar street_number
-        varchar zip_code FK
+        int city_id FK
         varchar phone_number
         varchar email "UNIQUE, NOT NULL"
         int gender_id FK

@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -65,7 +64,7 @@ public class ExcelDataReader {
         List<Person> people = new ArrayList<>();
         List<Hobby> hobbies = new ArrayList<>();
         List<PersonInterest> personInterests = new ArrayList<>();
-        Map<String, Map<String, Integer>> cityNamesByZipCode = new LinkedHashMap<>();
+        Map<CityAddress, City> citiesByAddress = new LinkedHashMap<>();
         int hobbyId = 1;
 
         for (Row row : sheet) {
@@ -76,13 +75,21 @@ public class ExcelDataReader {
             int personId = people.size() + 1;
             Name name = splitName(cellText(row, NAME_COLUMN, formatter));
             Address address = splitAddress(cellText(row, ADDRESS_COLUMN, formatter));
+            City city = citiesByAddress.computeIfAbsent(
+                    new CityAddress(address.zipCode(), address.cityName()),
+                    cityAddress -> new City(
+                            citiesByAddress.size() + 1,
+                            cityAddress.zipCode(),
+                            cityAddress.cityName()
+                    )
+            );
             Person person = new Person(
                     personId,
                     name.lastName(),
                     name.firstName(),
                     address.street(),
                     address.streetNumber(),
-                    address.zipCode(),
+                    city.cityId(),
                     cellText(row, PHONE_COLUMN, formatter),
                     cellText(row, EMAIL_COLUMN, formatter),
                     genderId(cellText(row, GENDER_COLUMN, formatter)),
@@ -98,13 +105,10 @@ public class ExcelDataReader {
             hobbies.addAll(personHobbies);
             hobbyId += personHobbies.size();
             personInterests.addAll(parseInterests(cellText(row, INTERESTS_COLUMN, formatter), personId));
-            cityNamesByZipCode
-                    .computeIfAbsent(address.zipCode(), ignored -> new LinkedHashMap<>())
-                    .merge(address.cityName(), 1, Integer::sum);
         }
 
         return new MigrationData(
-                toCities(cityNamesByZipCode),
+                List.copyOf(citiesByAddress.values()),
                 GENDERS,
                 people,
                 hobbies,
@@ -114,19 +118,27 @@ public class ExcelDataReader {
 
     private String cellText(Row row, int column, DataFormatter formatter) {
         Cell cell = row.getCell(column, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-        return cell == null ? "" : formatter.formatCellValue(cell).strip();
+        return cell == null ? "" : formatter.formatCellValue(cell);
     }
 
     private Name splitName(String fullName) {
-        String[] nameParts = fullName.split(",", 2);
-        return new Name(nameParts[0].strip(), nameParts[1].strip());
+        int separatorIndex = fullName.indexOf(", ");
+        return new Name(
+                fullName.substring(0, separatorIndex),
+                fullName.substring(separatorIndex + 2)
+        );
     }
 
     private Address splitAddress(String fullAddress) {
-        String[] addressParts = fullAddress.split(",", 3);
-        StreetAddress streetAddress = splitStreetAddress(addressParts[0].strip());
-        String zipCode = String.format("%05d", Integer.parseInt(addressParts[1].strip()));
-        return new Address(streetAddress.street(), streetAddress.streetNumber(), zipCode, addressParts[2].strip());
+        int firstSeparator = fullAddress.indexOf(", ");
+        int secondSeparator = fullAddress.indexOf(", ", firstSeparator + 2);
+        StreetAddress streetAddress = splitStreetAddress(fullAddress.substring(0, firstSeparator));
+        return new Address(
+                streetAddress.street(),
+                streetAddress.streetNumber(),
+                fullAddress.substring(firstSeparator + 2, secondSeparator),
+                fullAddress.substring(secondSeparator + 2)
+        );
     }
 
     private StreetAddress splitStreetAddress(String streetAndNumber) {
@@ -135,8 +147,8 @@ public class ExcelDataReader {
             streetNumberStart = streetAndNumber.lastIndexOf(' ', streetNumberStart - 1);
         }
         return new StreetAddress(
-                streetAndNumber.substring(0, streetNumberStart).strip(),
-                streetAndNumber.substring(streetNumberStart + 1).strip()
+                streetAndNumber.substring(0, streetNumberStart),
+                streetAndNumber.substring(streetNumberStart + 1)
         );
     }
 
@@ -180,19 +192,6 @@ public class ExcelDataReader {
         return personInterests;
     }
 
-    private List<City> toCities(Map<String, Map<String, Integer>> cityNamesByZipCode) {
-        return cityNamesByZipCode.entrySet().stream()
-                .map(entry -> new City(entry.getKey(), mostCommonCityName(entry.getValue())))
-                .toList();
-    }
-
-    private String mostCommonCityName(Map<String, Integer> cityNames) {
-        return cityNames.entrySet().stream()
-                .max(Comparator.comparingInt(Map.Entry::getValue))
-                .orElseThrow()
-                .getKey();
-    }
-
     private record Name(String lastName, String firstName) {
     }
 
@@ -200,5 +199,8 @@ public class ExcelDataReader {
     }
 
     private record StreetAddress(String street, String streetNumber) {
+    }
+
+    private record CityAddress(String zipCode, String cityName) {
     }
 }
