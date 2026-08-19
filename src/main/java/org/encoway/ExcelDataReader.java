@@ -13,7 +13,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class ExcelDataImporter {
+public class ExcelDataReader {
 
     public void init() {
         String workingDirectory = System.getProperty("user.dir");
@@ -21,7 +21,7 @@ public class ExcelDataImporter {
         File file = new File(workingDirectory, fileName);
         try (FileInputStream fileInputStream = new FileInputStream(file)) {
             try(Workbook workbook = new XSSFWorkbook(fileInputStream)) {
-                importData(workbook);
+                readData(workbook);
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -30,7 +30,7 @@ public class ExcelDataImporter {
         }
     }
 
-    public void importData(Workbook workbook) {
+    public void readData(Workbook workbook) {
 
         Sheet sheet = workbook.getSheet("Tabelle1");
         List<List<String>> rows = new ArrayList<>();
@@ -44,6 +44,10 @@ public class ExcelDataImporter {
         }
 
         String test = "";
+    }
+
+    private void toModel() {
+
     }
 
 
