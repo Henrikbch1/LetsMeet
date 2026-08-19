@@ -11,7 +11,7 @@ erDiagram
 
     GENDER {
         int gender_id PK
-        varchar label "NOT NULL; m | w | nb"
+        varchar label "NOT NULL"
     }
 
     PERSON {
@@ -19,6 +19,7 @@ erDiagram
         varchar last_name "NOT NULL"
         varchar first_name "NOT NULL"
         varchar street
+        varchar street_number
         varchar zip_code FK
         varchar phone_number
         varchar email "UNIQUE, NOT NULL"
@@ -29,8 +30,8 @@ erDiagram
     HOBBY {
         int hobby_id PK
         int user_id FK
-        varchar description "free text"
-        smallint priority "0-100"
+        text description
+        smallint priority "CHECK 0-100"
     }
 
     PERSON_INTEREST {

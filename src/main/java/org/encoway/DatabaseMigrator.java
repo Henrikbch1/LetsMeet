@@ -52,6 +52,7 @@ public class DatabaseMigrator {
                         last_name VARCHAR NOT NULL,
                         first_name VARCHAR NOT NULL,
                         street VARCHAR,
+                        street_number VARCHAR,
                         zip_code VARCHAR REFERENCES CITY(zip_code),
                         phone_number VARCHAR,
                         email VARCHAR UNIQUE NOT NULL,
