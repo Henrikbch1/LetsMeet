@@ -20,10 +20,6 @@ public class DatabaseMigrator {
     private static final String USER = "user";
     private static final String SECRET = "secret";
 
-    public void init() {
-        migrate();
-    }
-
     public void migrate() {
         try (Connection connection = DriverManager.getConnection(DATABASE_URL, USER, SECRET)) {
             boolean autoCommit = connection.getAutoCommit();
