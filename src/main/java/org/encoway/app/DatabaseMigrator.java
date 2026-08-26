@@ -11,6 +11,7 @@ import org.encoway.model.PersonInterest;
 import org.encoway.model.PersonLike;
 import org.encoway.model.PersonMessage;
 import org.encoway.model.RawInterest;
+import org.encoway.persistence.MigrationViews;
 import org.encoway.persistence.SchemaDefinition;
 import org.encoway.source.excel.ExcelDataReader;
 import org.encoway.source.mongo.MongoDataReader;
@@ -50,11 +51,7 @@ public class DatabaseMigrator {
 
     public void createTables(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_messages");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_likes");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_user_hobbies");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_user_interests");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_users");
+            new MigrationViews().dropMigrationViews(connection);
             statement.executeUpdate("DROP TABLE IF EXISTS person_message");
             statement.executeUpdate("DROP TABLE IF EXISTS person_like");
             statement.executeUpdate("DROP TABLE IF EXISTS person_interest_text");
@@ -75,70 +72,7 @@ public class DatabaseMigrator {
     }
 
     public void createMigrationUsersView(Connection connection) throws SQLException {
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_messages");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_likes");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_user_hobbies");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_user_interests");
-            statement.executeUpdate("DROP VIEW IF EXISTS migration_users");
-
-            statement.executeUpdate("""
-                    CREATE VIEW migration_users AS
-                    SELECT
-                        person.email::text AS email,
-                        person.first_name::text AS first_name,
-                        person.last_name::text AS last_name,
-                        person.birth_date::date AS birth_date,
-                        city.zip_code::text AS postal_code,
-                        city.city_name::text AS city,
-                        person.phone_number::text AS phone,
-                        gender.label::text AS gender
-                    FROM person
-                    JOIN city ON city.city_id = person.city_id
-                    JOIN gender ON gender.gender_id = person.gender_id
-                    """);
-            statement.executeUpdate("""
-                    CREATE VIEW migration_user_interests AS
-                    SELECT
-                        person.email::text AS email,
-                        person_interest_text.interest_code::text AS interest_code
-                    FROM person_interest_text
-                    JOIN person ON person.person_id = person_interest_text.person_id
-                    """);
-            statement.executeUpdate("""
-                    CREATE VIEW migration_user_hobbies AS
-                    SELECT
-                        person.email::text AS email,
-                        hobby.description::text AS hobby_name,
-                        hobby.priority::integer AS priority,
-                        'excel'::text AS source
-                    FROM hobby
-                    JOIN person ON person.person_id = hobby.user_id
-                    """);
-            statement.executeUpdate("""
-                    CREATE VIEW migration_likes AS
-                    SELECT
-                        liker.email::text AS liker_email,
-                        liked.email::text AS liked_email,
-                        person_like.status::text AS status,
-                        person_like.liked_at::timestamp AS liked_at
-                    FROM person_like
-                    JOIN person liker ON liker.person_id = person_like.liker_person_id
-                    JOIN person liked ON liked.person_id = person_like.liked_person_id
-                    """);
-            statement.executeUpdate("""
-                    CREATE VIEW migration_messages AS
-                    SELECT
-                        sender.email::text AS sender_email,
-                        receiver.email::text AS receiver_email,
-                        person_message.body::text AS body,
-                        person_message.sent_at::timestamp AS sent_at,
-                        person_message.conversation_id::integer AS conversation_id
-                    FROM person_message
-                    JOIN person sender ON sender.person_id = person_message.sender_person_id
-                    JOIN person receiver ON receiver.person_id = person_message.receiver_person_id
-                    """);
-        }
+        new MigrationViews().createMigrationViews(connection);
     }
 
     private void importData(Connection connection, MigrationData migrationData) throws SQLException {
