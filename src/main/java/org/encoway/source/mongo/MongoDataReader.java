@@ -70,41 +70,55 @@ public class MongoDataReader {
 
         for (Document user : users.find()) {
             String email = requireText(user, "_id");
-            String lowerEmail = email.toLowerCase(Locale.ROOT);
-            if (!seenLowerEmails.add(lowerEmail)) {
-                throw new IllegalStateException(
-                        "Duplicate case-insensitive Mongo user identity detected for a user email.");
-            }
+            assertNotDuplicate(email, seenLowerEmails);
 
-            Name name = splitName(requireText(user, "name"));
-            profiles.add(new MongoProfile(email, name.firstName(), name.lastName(), user.getString("phone")));
-
-            for (Document like : user.getList("likes", Document.class, List.of())) {
-                likes.add(new MongoLike(
-                        email,
-                        requireText(like, "liked_email"),
-                        requireText(like, "status"),
-                        parseTimestamp(requireText(like, "timestamp"))
-                ));
-            }
-
-            for (Document message : user.getList("messages", Document.class, List.of())) {
-                Integer conversationId = message.getInteger("conversation_id");
-                if (conversationId == null) {
-                    throw new IllegalStateException(
-                            "Missing or non-numeric conversation_id in a Mongo message entry.");
-                }
-                messages.add(new MongoMessage(
-                        email,
-                        requireText(message, "receiver_email"),
-                        conversationId,
-                        requireText(message, "message"),
-                        parseTimestamp(requireText(message, "timestamp"))
-                ));
-            }
+            profiles.add(mapProfile(user, email));
+            mapLikes(user, email, likes);
+            mapMessages(user, email, messages);
         }
 
         return new MongoData(profiles, likes, messages);
+    }
+
+    private void assertNotDuplicate(String email, Set<String> seenLowerEmails) {
+        String lowerEmail = email.toLowerCase(Locale.ROOT);
+        if (!seenLowerEmails.add(lowerEmail)) {
+            throw new IllegalStateException(
+                    "Duplicate case-insensitive Mongo user identity detected for a user email.");
+        }
+    }
+
+    private MongoProfile mapProfile(Document user, String email) {
+        Name name = splitName(requireText(user, "name"));
+        return new MongoProfile(email, name.firstName(), name.lastName(), user.getString("phone"));
+    }
+
+    private void mapLikes(Document user, String email, List<MongoLike> likes) {
+        for (Document like : user.getList("likes", Document.class, List.of())) {
+            likes.add(new MongoLike(
+                    email,
+                    requireText(like, "liked_email"),
+                    requireText(like, "status"),
+                    parseTimestamp(requireText(like, "timestamp"))
+            ));
+        }
+    }
+
+    private void mapMessages(Document user, String email, List<MongoMessage> messages) {
+        for (Document message : user.getList("messages", Document.class, List.of())) {
+            Integer conversationId = message.getInteger("conversation_id");
+            if (conversationId == null) {
+                throw new IllegalStateException(
+                        "Missing or non-numeric conversation_id in a Mongo message entry.");
+            }
+            messages.add(new MongoMessage(
+                    email,
+                    requireText(message, "receiver_email"),
+                    conversationId,
+                    requireText(message, "message"),
+                    parseTimestamp(requireText(message, "timestamp"))
+            ));
+        }
     }
 
     private String requireText(Document document, String field) {
