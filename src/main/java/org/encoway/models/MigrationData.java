@@ -7,7 +7,10 @@ public record MigrationData(
         List<Gender> genders,
         List<Person> people,
         List<Hobby> hobbies,
-        List<PersonInterest> personInterests
+        List<PersonInterest> personInterests,
+        List<RawInterest> rawInterests,
+        List<PersonLike> personLikes,
+        List<PersonMessage> personMessages
 ) {
 
     public MigrationData {
@@ -16,5 +19,8 @@ public record MigrationData(
         people = List.copyOf(people);
         hobbies = List.copyOf(hobbies);
         personInterests = List.copyOf(personInterests);
+        rawInterests = List.copyOf(rawInterests);
+        personLikes = List.copyOf(personLikes);
+        personMessages = List.copyOf(personMessages);
     }
 }

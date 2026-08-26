@@ -12,6 +12,7 @@ import org.encoway.models.Hobby;
 import org.encoway.models.MigrationData;
 import org.encoway.models.Person;
 import org.encoway.models.PersonInterest;
+import org.encoway.models.RawInterest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,9 +23,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class ExcelDataReader {
 
@@ -44,7 +47,6 @@ public class ExcelDataReader {
             new Gender(2, "w"),
             new Gender(3, "nb")
     );
-
     public MigrationData readMigrationData() {
         return readMigrationData(WORKBOOK_PATH);
     }
@@ -64,6 +66,7 @@ public class ExcelDataReader {
         List<Person> people = new ArrayList<>();
         List<Hobby> hobbies = new ArrayList<>();
         List<PersonInterest> personInterests = new ArrayList<>();
+        List<RawInterest> rawInterests = new ArrayList<>();
         Map<CityAddress, City> citiesByAddress = new LinkedHashMap<>();
         int hobbyId = 1;
 
@@ -104,7 +107,11 @@ public class ExcelDataReader {
             );
             hobbies.addAll(personHobbies);
             hobbyId += personHobbies.size();
-            personInterests.addAll(parseInterests(cellText(row, INTERESTS_COLUMN, formatter), personId));
+            String interestsText = cellText(row, INTERESTS_COLUMN, formatter);
+            for (String interestCode : interestCodes(interestsText)) {
+                rawInterests.add(new RawInterest(personId, interestCode));
+                personInterests.add(new PersonInterest(personId, interestGenderId(interestCode)));
+            }
         }
 
         return new MigrationData(
@@ -112,7 +119,10 @@ public class ExcelDataReader {
                 GENDERS,
                 people,
                 hobbies,
-                personInterests
+                personInterests,
+                rawInterests,
+                List.of(),
+                List.of()
         );
     }
 
@@ -161,8 +171,31 @@ public class ExcelDataReader {
         };
     }
 
+    private List<String> interestCodes(String interestValue) {
+        if (interestValue.isBlank()) {
+            return List.of();
+        }
+        return switch (interestValue) {
+            case "m" -> List.of("m");
+            case "w" -> List.of("w");
+            case "nb" -> List.of("nb");
+            case "mw" -> List.of("m", "w");
+            default -> throw new IllegalArgumentException("Unknown interest: " + interestValue);
+        };
+    }
+
+    private int interestGenderId(String interestCode) {
+        return switch (interestCode) {
+            case "m" -> 1;
+            case "w" -> 2;
+            case "nb" -> 3;
+            default -> throw new IllegalArgumentException("Unknown interest: " + interestCode);
+        };
+    }
+
     private List<Hobby> parseHobbies(String hobbyValues, int personId, int firstHobbyId) {
         List<Hobby> hobbies = new ArrayList<>();
+        Set<String> seenDescriptions = new LinkedHashSet<>();
         int hobbyId = firstHobbyId;
         for (String hobbyValue : hobbyValues.split(";")) {
             if (hobbyValue.isBlank()) {
@@ -173,23 +206,13 @@ public class ExcelDataReader {
             int descriptionEnd = hobbyValue.lastIndexOf('%', priorityStart - 1);
             String description = hobbyValue.substring(0, descriptionEnd).strip();
             int priority = Integer.parseInt(hobbyValue.substring(descriptionEnd + 1, priorityStart).strip());
+            if (!seenDescriptions.add(description)) {
+                // Same hobby fact for this person/source already recorded; keep only the first occurrence.
+                continue;
+            }
             hobbies.add(new Hobby(hobbyId++, personId, description, priority));
         }
         return hobbies;
-    }
-
-    private List<PersonInterest> parseInterests(String interests, int personId) {
-        List<PersonInterest> personInterests = new ArrayList<>();
-        if (interests.contains("m")) {
-            personInterests.add(new PersonInterest(personId, 1));
-        }
-        if (interests.contains("w")) {
-            personInterests.add(new PersonInterest(personId, 2));
-        }
-        if (interests.contains("nb")) {
-            personInterests.add(new PersonInterest(personId, 3));
-        }
-        return personInterests;
     }
 
     private record Name(String lastName, String firstName) {
