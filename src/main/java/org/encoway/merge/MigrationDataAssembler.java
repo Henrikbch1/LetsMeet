@@ -1,13 +1,13 @@
-package org.encoway;
+package org.encoway.merge;
 
-import org.encoway.models.MigrationData;
-import org.encoway.models.MongoData;
-import org.encoway.models.MongoLike;
-import org.encoway.models.MongoMessage;
-import org.encoway.models.MongoProfile;
-import org.encoway.models.Person;
-import org.encoway.models.PersonLike;
-import org.encoway.models.PersonMessage;
+import org.encoway.model.MigrationData;
+import org.encoway.model.MongoData;
+import org.encoway.model.MongoLike;
+import org.encoway.model.MongoMessage;
+import org.encoway.model.MongoProfile;
+import org.encoway.model.Person;
+import org.encoway.model.PersonLike;
+import org.encoway.model.PersonMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;

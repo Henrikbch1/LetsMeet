@@ -1,4 +1,4 @@
-package org.encoway.models;
+package org.encoway.model;
 
 import java.time.LocalDateTime;
 

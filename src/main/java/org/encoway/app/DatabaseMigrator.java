@@ -1,15 +1,18 @@
-package org.encoway;
+package org.encoway.app;
 
-import org.encoway.models.City;
-import org.encoway.models.Gender;
-import org.encoway.models.Hobby;
-import org.encoway.models.MigrationData;
-import org.encoway.models.MongoData;
-import org.encoway.models.Person;
-import org.encoway.models.PersonInterest;
-import org.encoway.models.PersonLike;
-import org.encoway.models.PersonMessage;
-import org.encoway.models.RawInterest;
+import org.encoway.merge.MigrationDataAssembler;
+import org.encoway.model.City;
+import org.encoway.model.Gender;
+import org.encoway.model.Hobby;
+import org.encoway.model.MigrationData;
+import org.encoway.model.MongoData;
+import org.encoway.model.Person;
+import org.encoway.model.PersonInterest;
+import org.encoway.model.PersonLike;
+import org.encoway.model.PersonMessage;
+import org.encoway.model.RawInterest;
+import org.encoway.source.excel.ExcelDataReader;
+import org.encoway.source.mongo.MongoDataReader;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

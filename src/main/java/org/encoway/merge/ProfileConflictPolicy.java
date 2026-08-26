@@ -1,4 +1,4 @@
-package org.encoway;
+package org.encoway.merge;
 
 /**
  * Strategy for resolving profile field conflicts between the Excel source and the

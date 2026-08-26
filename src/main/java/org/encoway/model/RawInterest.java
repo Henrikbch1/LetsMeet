@@ -1,4 +1,4 @@
-package org.encoway.models;
+package org.encoway.model;
 
 /**
  * A raw interest code row for one person, such as {@code "m"}, {@code "w"} or

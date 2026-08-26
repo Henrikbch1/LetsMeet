@@ -1,4 +1,4 @@
-package org.encoway;
+package org.encoway.source.excel;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -6,13 +6,13 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.encoway.models.City;
-import org.encoway.models.Gender;
-import org.encoway.models.Hobby;
-import org.encoway.models.MigrationData;
-import org.encoway.models.Person;
-import org.encoway.models.PersonInterest;
-import org.encoway.models.RawInterest;
+import org.encoway.model.City;
+import org.encoway.model.Gender;
+import org.encoway.model.Hobby;
+import org.encoway.model.MigrationData;
+import org.encoway.model.Person;
+import org.encoway.model.PersonInterest;
+import org.encoway.model.RawInterest;
 
 import java.io.IOException;
 import java.io.InputStream;
