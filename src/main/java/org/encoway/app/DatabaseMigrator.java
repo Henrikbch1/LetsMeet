@@ -1,14 +1,10 @@
 package org.encoway.app;
 
 import org.encoway.config.DatabaseConfig;
-import org.encoway.merge.MigrationDataAssembler;
 import org.encoway.model.MigrationData;
-import org.encoway.model.MongoData;
 import org.encoway.persistence.DataInserter;
 import org.encoway.persistence.MigrationViews;
 import org.encoway.persistence.SchemaDefinition;
-import org.encoway.source.excel.ExcelDataReader;
-import org.encoway.source.mongo.MongoDataReader;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,7 +13,7 @@ import java.sql.Statement;
 
 public class DatabaseMigrator {
 
-    public void migrate() {
+    public void migrate(MigrationData migrationData) {
         try (Connection connection = DriverManager.getConnection(
                 DatabaseConfig.DATABASE_URL,
                 DatabaseConfig.DATABASE_USER,
@@ -26,7 +22,7 @@ public class DatabaseMigrator {
             connection.setAutoCommit(false);
             try {
                 createTables(connection);
-                importData(connection);
+                importData(connection, migrationData);
                 createMigrationUsersView(connection);
                 connection.commit();
             } catch (SQLException | RuntimeException exception) {
@@ -53,13 +49,6 @@ public class DatabaseMigrator {
             statement.executeUpdate("DROP TABLE IF EXISTS city");
         }
         new SchemaDefinition().createSchema(connection);
-    }
-
-    public void importData(Connection connection) throws SQLException {
-        MigrationData excelData = new ExcelDataReader().readMigrationData();
-        MongoData mongoData = new MongoDataReader().readMongoData();
-        MigrationData migrationData = new MigrationDataAssembler().assemble(excelData, mongoData);
-        importData(connection, migrationData);
     }
 
     public void createMigrationUsersView(Connection connection) throws SQLException {
