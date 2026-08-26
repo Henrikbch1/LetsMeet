@@ -11,6 +11,7 @@ import org.encoway.model.PersonInterest;
 import org.encoway.model.PersonLike;
 import org.encoway.model.PersonMessage;
 import org.encoway.model.RawInterest;
+import org.encoway.persistence.SchemaDefinition;
 import org.encoway.source.excel.ExcelDataReader;
 import org.encoway.source.mongo.MongoDataReader;
 
@@ -62,81 +63,8 @@ public class DatabaseMigrator {
             statement.executeUpdate("DROP TABLE IF EXISTS person");
             statement.executeUpdate("DROP TABLE IF EXISTS gender");
             statement.executeUpdate("DROP TABLE IF EXISTS city");
-
-            statement.executeUpdate("""
-                    CREATE TABLE city (
-                        city_id INT PRIMARY KEY,
-                        zip_code VARCHAR NOT NULL,
-                        city_name VARCHAR NOT NULL,
-                        UNIQUE (zip_code, city_name)
-                    )
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE gender (
-                        gender_id INT PRIMARY KEY,
-                        label VARCHAR NOT NULL
-                    )
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE person (
-                        person_id INT PRIMARY KEY,
-                        last_name VARCHAR NOT NULL,
-                        first_name VARCHAR NOT NULL,
-                        street VARCHAR,
-                        street_number VARCHAR,
-                        city_id INT REFERENCES city(city_id),
-                        phone_number VARCHAR,
-                        email VARCHAR UNIQUE NOT NULL,
-                        gender_id INT REFERENCES gender(gender_id),
-                        birth_date DATE
-                    )
-                    """);
-            // Email is unique cross-source, case-insensitively (Excel vs. Mongo casing).
-            statement.executeUpdate(
-                    "CREATE UNIQUE INDEX person_email_lower_idx ON person (LOWER(email))");
-            statement.executeUpdate("""
-                    CREATE TABLE hobby (
-                        hobby_id INT PRIMARY KEY,
-                        user_id INT REFERENCES person(person_id),
-                        description TEXT,
-                        priority SMALLINT CHECK (priority BETWEEN -100 AND 100)
-                    )
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE person_interest (
-                        person_id INT REFERENCES person(person_id),
-                        gender_id INT REFERENCES gender(gender_id),
-                        PRIMARY KEY (person_id, gender_id)
-                    )
-                    """);
-            // Raw interest code rows per person.
-            statement.executeUpdate("""
-                    CREATE TABLE person_interest_text (
-                        person_id INT REFERENCES person(person_id),
-                        interest_code TEXT NOT NULL,
-                        PRIMARY KEY (person_id, interest_code)
-                    )
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE person_like (
-                        like_id INT PRIMARY KEY,
-                        liker_person_id INT NOT NULL REFERENCES person(person_id),
-                        liked_person_id INT NOT NULL REFERENCES person(person_id),
-                        status VARCHAR NOT NULL,
-                        liked_at TIMESTAMP NOT NULL
-                    )
-                    """);
-            statement.executeUpdate("""
-                    CREATE TABLE person_message (
-                        message_id INT PRIMARY KEY,
-                        sender_person_id INT NOT NULL REFERENCES person(person_id),
-                        receiver_person_id INT NOT NULL REFERENCES person(person_id),
-                        conversation_id INT NOT NULL,
-                        body TEXT NOT NULL,
-                        sent_at TIMESTAMP NOT NULL
-                    )
-                    """);
         }
+        new SchemaDefinition().createSchema(connection);
     }
 
     public void importData(Connection connection) throws SQLException {
