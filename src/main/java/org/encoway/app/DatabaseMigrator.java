@@ -1,5 +1,6 @@
 package org.encoway.app;
 
+import org.encoway.config.DatabaseConfig;
 import org.encoway.merge.MigrationDataAssembler;
 import org.encoway.model.MigrationData;
 import org.encoway.model.MongoData;
@@ -16,12 +17,11 @@ import java.sql.Statement;
 
 public class DatabaseMigrator {
 
-    private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/lf8_lets_meet_db";
-    private static final String USER = "user";
-    private static final String SECRET = "secret";
-
     public void migrate() {
-        try (Connection connection = DriverManager.getConnection(DATABASE_URL, USER, SECRET)) {
+        try (Connection connection = DriverManager.getConnection(
+                DatabaseConfig.DATABASE_URL,
+                DatabaseConfig.DATABASE_USER,
+                DatabaseConfig.PASSWORD)) {
             boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
