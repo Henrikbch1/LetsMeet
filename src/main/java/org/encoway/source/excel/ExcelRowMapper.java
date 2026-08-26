@@ -15,11 +15,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 class ExcelRowMapper {
 
@@ -40,6 +38,7 @@ class ExcelRowMapper {
     );
 
     private final DataFormatter formatter = new DataFormatter(Locale.GERMANY);
+    private final HobbyParser hobbyParser = new HobbyParser();
     private final List<Person> people = new ArrayList<>();
     private final List<Hobby> hobbies = new ArrayList<>();
     private final List<PersonInterest> personInterests = new ArrayList<>();
@@ -97,7 +96,7 @@ class ExcelRowMapper {
     }
 
     private void mapHobbies(Row row, int personId) {
-        List<Hobby> personHobbies = parseHobbies(
+        List<Hobby> personHobbies = hobbyParser.parseHobbies(
                 cellText(row, HOBBIES_COLUMN),
                 personId,
                 hobbyId
@@ -170,28 +169,6 @@ class ExcelRowMapper {
             case "mw" -> List.of("m", "w");
             default -> throw new IllegalArgumentException("Unknown interest: " + interestValue);
         };
-    }
-
-    private List<Hobby> parseHobbies(String hobbyValues, int personId, int firstHobbyId) {
-        List<Hobby> hobbies = new ArrayList<>();
-        Set<String> seenDescriptions = new LinkedHashSet<>();
-        int hobbyId = firstHobbyId;
-        for (String hobbyValue : hobbyValues.split(";")) {
-            if (hobbyValue.isBlank()) {
-                continue;
-            }
-
-            int priorityStart = hobbyValue.lastIndexOf('%');
-            int descriptionEnd = hobbyValue.lastIndexOf('%', priorityStart - 1);
-            String description = hobbyValue.substring(0, descriptionEnd).strip();
-            int priority = Integer.parseInt(hobbyValue.substring(descriptionEnd + 1, priorityStart).strip());
-            if (!seenDescriptions.add(description)) {
-                // Same hobby fact for this person/source already recorded; keep only the first occurrence.
-                continue;
-            }
-            hobbies.add(new Hobby(hobbyId++, personId, description, priority));
-        }
-        return hobbies;
     }
 
     private record Name(String lastName, String firstName) {
