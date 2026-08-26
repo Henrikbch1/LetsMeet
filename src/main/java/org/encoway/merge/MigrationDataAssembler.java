@@ -82,32 +82,28 @@ public class MigrationDataAssembler {
         if (mongoProfile == null) {
             return excelPerson;
         }
-        return switch (conflictPolicy) {
-            case EXCEL_WINS -> new Person(
-                    excelPerson.personId(),
-                    resolveField(excelPerson.lastName(), mongoProfile.lastName(), "last name", excelPerson.personId(), true),
-                    resolveField(excelPerson.firstName(), mongoProfile.firstName(), "first name", excelPerson.personId(), true),
-                    excelPerson.street(),
-                    excelPerson.streetNumber(),
-                    excelPerson.cityId(),
-                    resolveField(excelPerson.phoneNumber(), mongoProfile.phone(), "phone number", excelPerson.personId(), true),
-                    excelPerson.email(),
-                    excelPerson.genderId(),
-                    excelPerson.birthDate()
-            );
-            case MONGO_WINS -> new Person(
-                    excelPerson.personId(),
-                    resolveField(excelPerson.lastName(), mongoProfile.lastName(), "last name", excelPerson.personId(), false),
-                    resolveField(excelPerson.firstName(), mongoProfile.firstName(), "first name", excelPerson.personId(), false),
-                    excelPerson.street(),
-                    excelPerson.streetNumber(),
-                    excelPerson.cityId(),
-                    resolveField(excelPerson.phoneNumber(), mongoProfile.phone(), "phone number", excelPerson.personId(), false),
-                    excelPerson.email(),
-                    excelPerson.genderId(),
-                    excelPerson.birthDate()
-            );
+        boolean excelWins = switch (conflictPolicy) {
+            case EXCEL_WINS -> true;
+            case MONGO_WINS -> false;
         };
+        String lastName = resolveField(
+                excelPerson.lastName(), mongoProfile.lastName(), "last name", excelPerson.personId(), excelWins);
+        String firstName = resolveField(
+                excelPerson.firstName(), mongoProfile.firstName(), "first name", excelPerson.personId(), excelWins);
+        String phoneNumber = resolveField(
+                excelPerson.phoneNumber(), mongoProfile.phone(), "phone number", excelPerson.personId(), excelWins);
+        return new Person(
+                excelPerson.personId(),
+                lastName,
+                firstName,
+                excelPerson.street(),
+                excelPerson.streetNumber(),
+                excelPerson.cityId(),
+                phoneNumber,
+                excelPerson.email(),
+                excelPerson.genderId(),
+                excelPerson.birthDate()
+        );
     }
 
     /**
