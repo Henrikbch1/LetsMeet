@@ -80,7 +80,7 @@ class ExcelRowMapper {
                 city.cityId(),
                 cellText(row, PHONE_COLUMN),
                 cellText(row, EMAIL_COLUMN),
-                genderId(cellText(row, GENDER_COLUMN)),
+                genderCodeToId(cellText(row, GENDER_COLUMN), "gender"),
                 LocalDate.parse(cellText(row, BIRTH_DATE_COLUMN), BIRTH_DATE_FORMATTER)
         );
     }
@@ -110,7 +110,7 @@ class ExcelRowMapper {
         String interestsText = cellText(row, INTERESTS_COLUMN);
         for (String interestCode : interestCodes(interestsText)) {
             rawInterests.add(new RawInterest(personId, interestCode));
-            personInterests.add(new PersonInterest(personId, interestGenderId(interestCode)));
+            personInterests.add(new PersonInterest(personId, genderCodeToId(interestCode, "interest")));
         }
     }
 
@@ -150,12 +150,12 @@ class ExcelRowMapper {
         );
     }
 
-    private int genderId(String gender) {
-        return switch (gender) {
+    private int genderCodeToId(String genderCode, String valueType) {
+        return switch (genderCode) {
             case "m" -> 1;
             case "w" -> 2;
             case "nb" -> 3;
-            default -> throw new IllegalArgumentException("Unknown gender: " + gender);
+            default -> throw new IllegalArgumentException("Unknown " + valueType + ": " + genderCode);
         };
     }
 
@@ -169,15 +169,6 @@ class ExcelRowMapper {
             case "nb" -> List.of("nb");
             case "mw" -> List.of("m", "w");
             default -> throw new IllegalArgumentException("Unknown interest: " + interestValue);
-        };
-    }
-
-    private int interestGenderId(String interestCode) {
-        return switch (interestCode) {
-            case "m" -> 1;
-            case "w" -> 2;
-            case "nb" -> 3;
-            default -> throw new IllegalArgumentException("Unknown interest: " + interestCode);
         };
     }
 
