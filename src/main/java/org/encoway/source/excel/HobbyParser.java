@@ -7,9 +7,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-class HobbyParser {
+public class HobbyParser {
 
-    List<Hobby> parseHobbies(String hobbyValues, int personId, int firstHobbyId) {
+    public List<Hobby> parseHobbies(String hobbyValues, int personId, int firstHobbyId) {
         List<Hobby> hobbies = new ArrayList<>();
         Set<String> seenDescriptions = new LinkedHashSet<>();
         int hobbyId = firstHobbyId;
