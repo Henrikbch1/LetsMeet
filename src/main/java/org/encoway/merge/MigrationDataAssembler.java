@@ -132,27 +132,35 @@ public class MigrationDataAssembler {
     }
 
     private List<PersonLike> resolveLikes(List<MongoLike> mongoLikes, Map<String, Integer> personIdByLowerEmail) {
-        List<PersonLike> personLikes = new ArrayList<>(mongoLikes.size());
-        int likeId = 1;
-        for (MongoLike like : mongoLikes) {
-            int likerId = resolvePersonId(like.likerEmail(), personIdByLowerEmail);
-            int likedId = resolvePersonId(like.likedEmail(), personIdByLowerEmail);
-            personLikes.add(new PersonLike(likeId++, likerId, likedId, like.status(), like.likedAt()));
-        }
-        return personLikes;
+        return resolveRelations(mongoLikes, 1, personIdByLowerEmail, (like, likeId, resolver) -> new PersonLike(
+                likeId,
+                resolver.resolve(like.likerEmail()),
+                resolver.resolve(like.likedEmail()),
+                like.status(),
+                like.likedAt()));
     }
 
     private List<PersonMessage> resolveMessages(
             List<MongoMessage> mongoMessages, Map<String, Integer> personIdByLowerEmail) {
-        List<PersonMessage> personMessages = new ArrayList<>(mongoMessages.size());
-        int messageId = 1;
-        for (MongoMessage message : mongoMessages) {
-            int senderId = resolvePersonId(message.senderEmail(), personIdByLowerEmail);
-            int receiverId = resolvePersonId(message.receiverEmail(), personIdByLowerEmail);
-            personMessages.add(new PersonMessage(
-                    messageId++, senderId, receiverId, message.conversationId(), message.body(), message.sentAt()));
+        return resolveRelations(mongoMessages, 1, personIdByLowerEmail, (message, messageId, resolver) ->
+                new PersonMessage(
+                        messageId,
+                        resolver.resolve(message.senderEmail()),
+                        resolver.resolve(message.receiverEmail()),
+                        message.conversationId(),
+                        message.body(),
+                        message.sentAt()));
+    }
+
+    private <T, R> List<R> resolveRelations(
+            List<T> relations, int startId, Map<String, Integer> personIdByLowerEmail, RelationMapper<T, R> mapper) {
+        List<R> resolvedRelations = new ArrayList<>(relations.size());
+        int relationId = startId;
+        PersonIdResolver resolver = email -> resolvePersonId(email, personIdByLowerEmail);
+        for (T relation : relations) {
+            resolvedRelations.add(mapper.map(relation, relationId++, resolver));
         }
-        return personMessages;
+        return resolvedRelations;
     }
 
     private int resolvePersonId(String email, Map<String, Integer> personIdByLowerEmail) {
@@ -162,5 +170,15 @@ public class MigrationDataAssembler {
                     "Unresolved relation reference: no matching person found for the referenced email.");
         }
         return personId;
+    }
+
+    @FunctionalInterface
+    private interface PersonIdResolver {
+        int resolve(String email);
+    }
+
+    @FunctionalInterface
+    private interface RelationMapper<T, R> {
+        R map(T relation, int relationId, PersonIdResolver personIdResolver);
     }
 }
