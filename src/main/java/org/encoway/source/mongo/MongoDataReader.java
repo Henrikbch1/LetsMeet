@@ -30,6 +30,7 @@ public class MongoDataReader {
     private static final String DEFAULT_CONNECTION_STRING = "mongodb://localhost:27017";
     private static final String DEFAULT_DATABASE_NAME = "LetsMeet";
     private static final String DEFAULT_COLLECTION_NAME = "users";
+    private static final String NAME_SEPARATOR = ", ";
 
     // "u" (year) is used instead of "y" (year-of-era): with ResolverStyle.STRICT, "y" requires
     // an era field to resolve, which these timestamps do not have.
@@ -146,12 +147,14 @@ public class MongoDataReader {
     }
 
     private Name splitName(String fullName) {
-        int separatorIndex = fullName.indexOf(", ");
+        int separatorIndex = fullName.indexOf(NAME_SEPARATOR);
         if (separatorIndex < 0) {
             throw new IllegalStateException(
                     "Malformed Mongo user name, expected the 'Nachname, Vorname' format.");
         }
-        return new Name(fullName.substring(separatorIndex + 2), fullName.substring(0, separatorIndex));
+        return new Name(
+                fullName.substring(separatorIndex + NAME_SEPARATOR.length()),
+                fullName.substring(0, separatorIndex));
     }
 
     private record Name(String firstName, String lastName) {

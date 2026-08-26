@@ -3,6 +3,7 @@ package org.encoway.app;
 import org.encoway.config.DatabaseConfig;
 import org.encoway.model.MigrationData;
 import org.encoway.persistence.DataInserter;
+import org.encoway.persistence.DatabaseObjectNames;
 import org.encoway.persistence.MigrationViews;
 import org.encoway.persistence.SchemaDefinition;
 
@@ -39,14 +40,15 @@ public class DatabaseMigrator {
     public void createTables(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             new MigrationViews().dropMigrationViews(connection);
-            statement.executeUpdate("DROP TABLE IF EXISTS person_message");
-            statement.executeUpdate("DROP TABLE IF EXISTS person_like");
-            statement.executeUpdate("DROP TABLE IF EXISTS person_interest_text");
-            statement.executeUpdate("DROP TABLE IF EXISTS person_interest");
-            statement.executeUpdate("DROP TABLE IF EXISTS hobby");
-            statement.executeUpdate("DROP TABLE IF EXISTS person");
-            statement.executeUpdate("DROP TABLE IF EXISTS gender");
-            statement.executeUpdate("DROP TABLE IF EXISTS city");
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_MESSAGE));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_LIKE));
+            statement.executeUpdate(
+                    "DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST_TEXT));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_HOBBY));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_GENDER));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_CITY));
         }
         new SchemaDefinition().createSchema(connection);
     }

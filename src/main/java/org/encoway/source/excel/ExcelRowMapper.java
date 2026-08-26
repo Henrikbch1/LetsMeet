@@ -30,11 +30,24 @@ class ExcelRowMapper {
     private static final int INTERESTS_COLUMN = 6;
     private static final int BIRTH_DATE_COLUMN = 7;
 
+    private static final String NAME_ADDRESS_SEPARATOR = ", ";
+
+    private static final String GENDER_CODE_MALE = "m";
+    private static final String GENDER_CODE_FEMALE = "w";
+    private static final String GENDER_CODE_NON_BINARY = "nb";
+    private static final String GENDER_CODE_MALE_AND_FEMALE = "mw";
+
+    private static final int GENDER_ID_MALE = 1;
+    private static final int GENDER_ID_FEMALE = 2;
+    private static final int GENDER_ID_NON_BINARY = 3;
+
+    private static final int FIRST_ID = 1;
+
     private static final DateTimeFormatter BIRTH_DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final List<Gender> GENDERS = List.of(
-            new Gender(1, "m"),
-            new Gender(2, "w"),
-            new Gender(3, "nb")
+            new Gender(GENDER_ID_MALE, GENDER_CODE_MALE),
+            new Gender(GENDER_ID_FEMALE, GENDER_CODE_FEMALE),
+            new Gender(GENDER_ID_NON_BINARY, GENDER_CODE_NON_BINARY)
     );
 
     private final DataFormatter formatter = new DataFormatter(Locale.GERMANY);
@@ -44,10 +57,10 @@ class ExcelRowMapper {
     private final List<PersonInterest> personInterests = new ArrayList<>();
     private final List<RawInterest> rawInterests = new ArrayList<>();
     private final Map<CityAddress, City> citiesByAddress = new LinkedHashMap<>();
-    private int hobbyId = 1;
+    private int hobbyId = FIRST_ID;
 
     void mapRow(Row row) {
-        int personId = people.size() + 1;
+        int personId = people.size() + FIRST_ID;
         people.add(mapPerson(row, personId));
         mapHobbies(row, personId);
         mapInterests(row, personId);
@@ -88,7 +101,7 @@ class ExcelRowMapper {
         return citiesByAddress.computeIfAbsent(
                 new CityAddress(address.zipCode(), address.cityName()),
                 cityAddress -> new City(
-                        citiesByAddress.size() + 1,
+                        citiesByAddress.size() + FIRST_ID,
                         cityAddress.zipCode(),
                         cityAddress.cityName()
                 )
@@ -119,22 +132,23 @@ class ExcelRowMapper {
     }
 
     private Name splitName(String fullName) {
-        int separatorIndex = fullName.indexOf(", ");
+        int separatorIndex = fullName.indexOf(NAME_ADDRESS_SEPARATOR);
         return new Name(
                 fullName.substring(0, separatorIndex),
-                fullName.substring(separatorIndex + 2)
+                fullName.substring(separatorIndex + NAME_ADDRESS_SEPARATOR.length())
         );
     }
 
     private Address splitAddress(String fullAddress) {
-        int firstSeparator = fullAddress.indexOf(", ");
-        int secondSeparator = fullAddress.indexOf(", ", firstSeparator + 2);
+        int firstSeparator = fullAddress.indexOf(NAME_ADDRESS_SEPARATOR);
+        int secondSeparator = fullAddress.indexOf(
+                NAME_ADDRESS_SEPARATOR, firstSeparator + NAME_ADDRESS_SEPARATOR.length());
         StreetAddress streetAddress = splitStreetAddress(fullAddress.substring(0, firstSeparator));
         return new Address(
                 streetAddress.street(),
                 streetAddress.streetNumber(),
-                fullAddress.substring(firstSeparator + 2, secondSeparator),
-                fullAddress.substring(secondSeparator + 2)
+                fullAddress.substring(firstSeparator + NAME_ADDRESS_SEPARATOR.length(), secondSeparator),
+                fullAddress.substring(secondSeparator + NAME_ADDRESS_SEPARATOR.length())
         );
     }
 
@@ -151,9 +165,9 @@ class ExcelRowMapper {
 
     private int genderCodeToId(String genderCode, String valueType) {
         return switch (genderCode) {
-            case "m" -> 1;
-            case "w" -> 2;
-            case "nb" -> 3;
+            case GENDER_CODE_MALE -> GENDER_ID_MALE;
+            case GENDER_CODE_FEMALE -> GENDER_ID_FEMALE;
+            case GENDER_CODE_NON_BINARY -> GENDER_ID_NON_BINARY;
             default -> throw new IllegalArgumentException("Unknown " + valueType + ": " + genderCode);
         };
     }
@@ -163,10 +177,10 @@ class ExcelRowMapper {
             return List.of();
         }
         return switch (interestValue) {
-            case "m" -> List.of("m");
-            case "w" -> List.of("w");
-            case "nb" -> List.of("nb");
-            case "mw" -> List.of("m", "w");
+            case GENDER_CODE_MALE -> List.of(GENDER_CODE_MALE);
+            case GENDER_CODE_FEMALE -> List.of(GENDER_CODE_FEMALE);
+            case GENDER_CODE_NON_BINARY -> List.of(GENDER_CODE_NON_BINARY);
+            case GENDER_CODE_MALE_AND_FEMALE -> List.of(GENDER_CODE_MALE, GENDER_CODE_FEMALE);
             default -> throw new IllegalArgumentException("Unknown interest: " + interestValue);
         };
     }

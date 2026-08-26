@@ -28,7 +28,9 @@ public class DataInserter {
     private static final int BIRTH_DATE = 10;
 
     public void insertCities(Connection connection, List<City> cities) throws SQLException {
-        executeBatch(connection, "INSERT INTO city (city_id, zip_code, city_name) VALUES (?, ?, ?)",
+        executeBatch(connection,
+                "INSERT INTO %s (city_id, zip_code, city_name) VALUES (?, ?, ?)"
+                        .formatted(DatabaseObjectNames.TABLE_CITY),
                 cities, (statement, city) -> {
                     statement.setInt(1, city.cityId());
                     statement.setString(2, city.zipCode());
@@ -37,7 +39,8 @@ public class DataInserter {
     }
 
     public void insertGenders(Connection connection, List<Gender> genders) throws SQLException {
-        executeBatch(connection, "INSERT INTO gender (gender_id, label) VALUES (?, ?)",
+        executeBatch(connection,
+                "INSERT INTO %s (gender_id, label) VALUES (?, ?)".formatted(DatabaseObjectNames.TABLE_GENDER),
                 genders, (statement, gender) -> {
                     statement.setInt(1, gender.genderId());
                     statement.setString(2, gender.label());
@@ -46,11 +49,11 @@ public class DataInserter {
 
     public void insertPeople(Connection connection, List<Person> people) throws SQLException {
         executeBatch(connection, """
-                INSERT INTO person (
+                INSERT INTO %s (
                     person_id, last_name, first_name, street, street_number, city_id, phone_number,
                     email, gender_id, birth_date
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, people, (statement, person) -> {
+                """.formatted(DatabaseObjectNames.TABLE_PERSON), people, (statement, person) -> {
                     statement.setInt(PERSON_ID, person.personId());
                     statement.setString(LAST_NAME, person.lastName());
                     statement.setString(FIRST_NAME, person.firstName());
@@ -65,7 +68,9 @@ public class DataInserter {
     }
 
     public void insertHobbies(Connection connection, List<Hobby> hobbies) throws SQLException {
-        executeBatch(connection, "INSERT INTO hobby (hobby_id, user_id, description, priority) VALUES (?, ?, ?, ?)",
+        executeBatch(connection,
+                "INSERT INTO %s (hobby_id, user_id, description, priority) VALUES (?, ?, ?, ?)"
+                        .formatted(DatabaseObjectNames.TABLE_HOBBY),
                 hobbies, (statement, hobby) -> {
                     statement.setInt(1, hobby.hobbyId());
                     statement.setInt(2, hobby.userId());
@@ -76,7 +81,9 @@ public class DataInserter {
 
     public void insertPersonInterests(Connection connection, List<PersonInterest> personInterests)
             throws SQLException {
-        executeBatch(connection, "INSERT INTO person_interest (person_id, gender_id) VALUES (?, ?)",
+        executeBatch(connection,
+                "INSERT INTO %s (person_id, gender_id) VALUES (?, ?)"
+                        .formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST),
                 personInterests, (statement, personInterest) -> {
                     statement.setInt(1, personInterest.personId());
                     statement.setInt(2, personInterest.genderId());
@@ -84,7 +91,9 @@ public class DataInserter {
     }
 
     public void insertRawInterests(Connection connection, List<RawInterest> rawInterests) throws SQLException {
-        executeBatch(connection, "INSERT INTO person_interest_text (person_id, interest_code) VALUES (?, ?)",
+        executeBatch(connection,
+                "INSERT INTO %s (person_id, interest_code) VALUES (?, ?)"
+                        .formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST_TEXT),
                 rawInterests, (statement, rawInterest) -> {
                     statement.setInt(1, rawInterest.personId());
                     statement.setString(2, rawInterest.interestCode());
@@ -93,9 +102,9 @@ public class DataInserter {
 
     public void insertPersonLikes(Connection connection, List<PersonLike> personLikes) throws SQLException {
         executeBatch(connection, """
-                INSERT INTO person_like (like_id, liker_person_id, liked_person_id, status, liked_at)
+                INSERT INTO %s (like_id, liker_person_id, liked_person_id, status, liked_at)
                 VALUES (?, ?, ?, ?, ?)
-                """, personLikes, (statement, personLike) -> {
+                """.formatted(DatabaseObjectNames.TABLE_PERSON_LIKE), personLikes, (statement, personLike) -> {
                     statement.setInt(1, personLike.likeId());
                     statement.setInt(2, personLike.likerPersonId());
                     statement.setInt(3, personLike.likedPersonId());
@@ -107,10 +116,10 @@ public class DataInserter {
     public void insertPersonMessages(Connection connection, List<PersonMessage> personMessages)
             throws SQLException {
         executeBatch(connection, """
-                INSERT INTO person_message (
+                INSERT INTO %s (
                     message_id, sender_person_id, receiver_person_id, conversation_id, body, sent_at
                 ) VALUES (?, ?, ?, ?, ?, ?)
-                """, personMessages, (statement, personMessage) -> {
+                """.formatted(DatabaseObjectNames.TABLE_PERSON_MESSAGE), personMessages, (statement, personMessage) -> {
                     statement.setInt(1, personMessage.messageId());
                     statement.setInt(2, personMessage.senderPersonId());
                     statement.setInt(3, personMessage.receiverPersonId());
