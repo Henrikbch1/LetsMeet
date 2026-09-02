@@ -46,6 +46,8 @@ public class DatabaseMigrator {
                     "DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST_TEXT));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_HOBBY));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PHOTO));
+            statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_FRIEND));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_GENDER));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_CITY));

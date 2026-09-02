@@ -36,13 +36,36 @@ public class SchemaDefinition {
                 phone_number VARCHAR,
                 email VARCHAR UNIQUE NOT NULL,
                 gender_id INT REFERENCES gender(gender_id),
-                birth_date DATE
+                birth_date DATE,
+                profile_image BYTEA
             )
             """.formatted(DatabaseObjectNames.TABLE_PERSON);
 
     // Email is unique cross-source, case-insensitively (Excel vs. Mongo casing).
     private static final String CREATE_PERSON_EMAIL_LOWER_INDEX =
             "CREATE UNIQUE INDEX person_email_lower_idx ON person (LOWER(email))";
+
+    // Additional photos beyond the single profile image; either stored directly or linked by URL.
+    private static final String CREATE_PHOTO_TABLE = """
+            CREATE TABLE %s (
+                photo_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                person_id INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                image_data BYTEA,
+                image_url TEXT,
+                CHECK ((image_data IS NULL) <> (image_url IS NULL))
+            )
+            """.formatted(DatabaseObjectNames.TABLE_PHOTO);
+
+    // Symmetric friendship: one row per undirected pair, stored canonically (low, high) so no
+    // self-reference and no mirrored duplicate can ever be recorded.
+    private static final String CREATE_PERSON_FRIEND_TABLE = """
+            CREATE TABLE %s (
+                person_id_low INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                person_id_high INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
+                PRIMARY KEY (person_id_low, person_id_high),
+                CHECK (person_id_low < person_id_high)
+            )
+            """.formatted(DatabaseObjectNames.TABLE_PERSON_FRIEND);
 
     private static final String CREATE_HOBBY_TABLE = """
             CREATE TABLE %s (
@@ -97,6 +120,8 @@ public class SchemaDefinition {
             statement.executeUpdate(CREATE_GENDER_TABLE);
             statement.executeUpdate(CREATE_PERSON_TABLE);
             statement.executeUpdate(CREATE_PERSON_EMAIL_LOWER_INDEX);
+            statement.executeUpdate(CREATE_PHOTO_TABLE);
+            statement.executeUpdate(CREATE_PERSON_FRIEND_TABLE);
             statement.executeUpdate(CREATE_HOBBY_TABLE);
             statement.executeUpdate(CREATE_PERSON_INTEREST_TABLE);
             statement.executeUpdate(CREATE_PERSON_INTEREST_TEXT_TABLE);
