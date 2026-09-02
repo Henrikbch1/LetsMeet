@@ -1,6 +1,6 @@
 package org.encoway;
 
-import org.encoway.app.MigrationRunner;
+import org.encoway.migration.application.MigrationRunner;
 
 public class Main {
 
