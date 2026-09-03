@@ -45,34 +45,14 @@ class SchemaDefinition {
     private static final String CREATE_PERSON_EMAIL_LOWER_INDEX =
             "CREATE UNIQUE INDEX person_email_lower_idx ON person (LOWER(email))";
 
-    // Additional photos beyond the single profile image; either stored directly or linked by URL.
-    private static final String CREATE_PHOTO_TABLE = """
-            CREATE TABLE %s (
-                photo_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                person_id INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
-                image_data BYTEA,
-                image_url TEXT,
-                CHECK ((image_data IS NULL) <> (image_url IS NULL))
-            )
-            """.formatted(DatabaseObjectNames.TABLE_PHOTO);
-
-    // Symmetric friendship: one row per undirected pair, stored canonically (low, high) so no
-    // self-reference and no mirrored duplicate can ever be recorded.
-    private static final String CREATE_PERSON_FRIEND_TABLE = """
-            CREATE TABLE %s (
-                person_id_low INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
-                person_id_high INT NOT NULL REFERENCES person(person_id) ON DELETE CASCADE,
-                PRIMARY KEY (person_id_low, person_id_high),
-                CHECK (person_id_low < person_id_high)
-            )
-            """.formatted(DatabaseObjectNames.TABLE_PERSON_FRIEND);
-
     private static final String CREATE_HOBBY_TABLE = """
             CREATE TABLE %s (
                 hobby_id INT PRIMARY KEY,
                 user_id INT REFERENCES person(person_id),
                 description TEXT,
-                priority SMALLINT CHECK (priority BETWEEN %d AND %d)
+                priority SMALLINT CHECK (priority BETWEEN %d AND %d),
+                source VARCHAR NOT NULL CHECK (source <> ''),
+                UNIQUE (user_id, description)
             )
             """.formatted(DatabaseObjectNames.TABLE_HOBBY, HOBBY_PRIORITY_MIN, HOBBY_PRIORITY_MAX);
 
@@ -114,30 +94,44 @@ class SchemaDefinition {
             )
             """.formatted(DatabaseObjectNames.TABLE_PERSON_MESSAGE);
 
+    // Records physical import records that could not be taken over, so every non-adoption is
+    // documented exactly once and never applied twice on a repeated import.
+    private static final String CREATE_MIGRATION_REJECTION_TABLE = """
+            CREATE TABLE %s (
+                source VARCHAR NOT NULL,
+                source_ref VARCHAR NOT NULL,
+                reason VARCHAR NOT NULL CHECK (reason <> ''),
+                PRIMARY KEY (source, source_ref)
+            )
+            """.formatted(DatabaseObjectNames.TABLE_MIGRATION_REJECTION);
+
     protected void createSchema(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(CREATE_CITY_TABLE);
             statement.executeUpdate(CREATE_GENDER_TABLE);
             statement.executeUpdate(CREATE_PERSON_TABLE);
             statement.executeUpdate(CREATE_PERSON_EMAIL_LOWER_INDEX);
-            statement.executeUpdate(CREATE_PHOTO_TABLE);
-            statement.executeUpdate(CREATE_PERSON_FRIEND_TABLE);
             statement.executeUpdate(CREATE_HOBBY_TABLE);
             statement.executeUpdate(CREATE_PERSON_INTEREST_TABLE);
             statement.executeUpdate(CREATE_PERSON_INTEREST_TEXT_TABLE);
             statement.executeUpdate(CREATE_PERSON_LIKE_TABLE);
             statement.executeUpdate(CREATE_PERSON_MESSAGE_TABLE);
+            statement.executeUpdate(CREATE_MIGRATION_REJECTION_TABLE);
         }
     }
 
     protected void dropSchema(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate(
+                    "DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_MIGRATION_REJECTION));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_MESSAGE));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_LIKE));
             statement.executeUpdate(
                     "DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST_TEXT));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_INTEREST));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_HOBBY));
+            // Legacy V2 tables: no longer (re-)created, but still dropped so a reset also cleans
+            // up a database that still has them from a previous run.
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PHOTO));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON_FRIEND));
             statement.executeUpdate("DROP TABLE IF EXISTS %s".formatted(DatabaseObjectNames.TABLE_PERSON));

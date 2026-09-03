@@ -9,6 +9,8 @@ import java.util.Set;
 
 public class HobbyParser {
 
+    public static final String SOURCE_EXCEL = "excel";
+
     private static final String HOBBY_DELIMITER = ";";
     private static final char PRIORITY_MARKER = '%';
 
@@ -29,7 +31,7 @@ public class HobbyParser {
                 // Same hobby fact for this person/source already recorded; keep only the first occurrence.
                 continue;
             }
-            hobbies.add(new Hobby(hobbyId++, personId, description, priority));
+            hobbies.add(new Hobby(hobbyId++, personId, description, priority, SOURCE_EXCEL));
         }
         return hobbies;
     }

@@ -17,6 +17,7 @@ final class DatabaseObjectNames {
     public static final String TABLE_PERSON_INTEREST_TEXT = "person_interest_text";
     public static final String TABLE_PERSON_LIKE = "person_like";
     public static final String TABLE_PERSON_MESSAGE = "person_message";
+    public static final String TABLE_MIGRATION_REJECTION = "migration_rejection";
 
     private DatabaseObjectNames() {
     }
