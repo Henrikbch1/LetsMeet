@@ -87,7 +87,34 @@ Dieses Schema bringt die Daten bis in die dritte Normalform.
   keine Beziehungen.
 - Namen, Kontaktdaten, Interessen, Nachrichten und Bilder sind personenbezogen. Interessen können
   zudem Rückschlüsse auf besonders geschützte Angaben zulassen. Deshalb verarbeitet der Import die
-  Daten nur lokal und protokolliert bei Konflikten keine Feldwerte. Die konkrete
+  Daten nur lokal und protokolliert bei Konflikten keine Feldwerte.
+
+### 3.9.2026
+
+- Die Anwendung wurde in die Schichten `application`, `assembly`, `source` und
+  `target.postgres` aufgeteilt. Die Datenbankmigration verwendet spezialisierte
+  Writer je Tabelle und einen gemeinsamen Batch-Inserter, damit Verantwortlichkeiten
+  getrennt und Änderungen gezielter möglich sind.
+- Das Transferpaket `letsmeet-transfer-v3` wird Datensatz für Datensatz validiert.
+  Nicht übernehmbare Datensätze werden mit Quelldatei, Datensatzpfad und Begründung
+  über [`RejectionWriter.java`](../src/main/java/org/encoway/migration/target/postgres/RejectionWriter.java)
+  in der Tabelle `migration_rejection` dokumentiert. Gültige Datensätze derselben
+  Lieferung werden trotzdem verarbeitet.
+- Bei Transferpaket-Likes werden fehlende Pflichtangaben (`status` und Zeitstempel)
+  nicht erfunden. Solche Datensätze werden abgelehnt. Hobbys werden als Fakt aus
+  Person und Beschreibung dedupliziert. Bereits vorhandene Zuordnungen haben Vorrang.
+- Die Datenbankmigration läuft als Gesamttransaktion. Vor jeder einzelnen
+  Transferpaket-Einfügung wird ein Savepoint gesetzt. Schlägt die Einfügung fehl,
+  wird nur bis zu diesem Savepoint zurückgerollt und der Datensatz als Ablehnung
+  dokumentiert. Die übrigen Datensätze werden weiterverarbeitet. Ein schwerer
+  Fehler außerhalb dieser Einzelfälle rollt weiterhin die gesamte Migration zurück.
+- XML-Dateien werden ohne DTDs und externe Entitäten eingelesen. Als
+  Kodierungsfehler gelten nicht lesbare Zeichenfolgen, die beim Einlesen durch das
+  Ersatzzeichen `U+FFFD` ersetzt wurden. Sentinel-Profile enthalten nur Platzhalter
+  für unbekannte Werte, konkret das Geburtsdatum `01.01.1900` und den Ort
+  `unbekannt`, und werden deshalb abgelehnt. Mojibake bezeichnet falsch dekodierten
+  Text wie `MÃ¼ller` statt `Müller`. Eindeutig erkennbares Mojibake wird repariert,
+  korrekt kodierte Werte bleiben unverändert.
 
 ```mermaid
 erDiagram
