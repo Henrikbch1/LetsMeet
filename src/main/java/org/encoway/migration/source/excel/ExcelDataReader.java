@@ -4,7 +4,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.encoway.migration.model.MigrationData;
+import org.encoway.migration.domain.model.MigrationData;
 
 import java.io.IOException;
 import java.io.InputStream;

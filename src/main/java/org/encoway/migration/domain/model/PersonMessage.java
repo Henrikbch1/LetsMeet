@@ -1,4 +1,4 @@
-package org.encoway.migration.model;
+package org.encoway.migration.domain.model;
 
 import java.time.LocalDateTime;
 

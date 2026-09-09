@@ -3,7 +3,7 @@ package org.encoway.migration.source.excel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.encoway.migration.model.Hobby;
+import org.encoway.migration.domain.model.Hobby;
 import org.junit.jupiter.api.Test;
 
 class HobbyParserTest {

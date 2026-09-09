@@ -1,7 +1,7 @@
-package org.encoway.migration.assembly;
+package org.encoway.migration.application.assembly;
 
-import org.encoway.migration.model.MongoProfile;
-import org.encoway.migration.model.Person;
+import org.encoway.migration.domain.model.Person;
+import org.encoway.migration.source.mongo.model.MongoProfile;
 
 import java.util.HashMap;
 import java.util.List;

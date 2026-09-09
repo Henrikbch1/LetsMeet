@@ -1,9 +1,9 @@
 package org.encoway.migration.target.postgres;
 
-import org.encoway.migration.model.City;
-import org.encoway.migration.model.MigrationData;
-import org.encoway.migration.model.MigrationRejection;
-import org.encoway.migration.model.Person;
+import org.encoway.migration.domain.model.City;
+import org.encoway.migration.domain.model.MigrationData;
+import org.encoway.migration.domain.model.MigrationRejection;
+import org.encoway.migration.domain.model.Person;
 import org.encoway.migration.source.transfer.TransferPackageProcessor;
 import org.encoway.migration.source.transfer.TransferPackageProcessor.PendingHobby;
 import org.encoway.migration.source.transfer.TransferPackageProcessor.PendingProfile;

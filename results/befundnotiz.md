@@ -78,12 +78,12 @@ Dieses Schema bringt die Daten bis in die dritte Normalform.
 
 - Das Zielmodell speichert genau ein Profilbild direkt in `PERSON.profile_image`. Weitere Fotos
   liegen in `PHOTO` und enthalten entweder Binärdaten oder eine URL, niemals beides. Die MongoDB-
-  Lieferung besitzt kein Foto-, Bild- oder Avatar-Feld; deshalb erfinden wir keine Platzhalter und
+  Lieferung besitzt kein Foto-, Bild- oder Avatar-Feld. Deshalb erfinden wir keine Platzhalter und
   importieren aktuell keine Fotos.
 - Freundschaften speichern wir als symmetrische Beziehung in `PERSON_FRIEND` und jedes Paar nur
   einmal in kanonischer Reihenfolge (`person_id_low < person_id_high`). Eine gerichtete Speicherung
   wie bei Likes haben wir verworfen, weil eine Freundschaft beiden Personen zugeordnet ist. Alle
-  1.576 gelieferten `friends`-Arrays sind leer; ohne belegtes Elementformat importieren wir daraus
+  1.576 gelieferten `friends`-Arrays sind leer. Ohne belegtes Elementformat importieren wir daraus
   keine Beziehungen.
 - Namen, Kontaktdaten, Interessen, Nachrichten und Bilder sind personenbezogen. Interessen können
   zudem Rückschlüsse auf besonders geschützte Angaben zulassen. Deshalb verarbeitet der Import die
@@ -120,7 +120,8 @@ Dieses Schema bringt die Daten bis in die dritte Normalform.
 
 Ergänzt am 09.09.2026 um Hobby-Herkunft, Eindeutigkeit und Ablehnungen.
 `PHOTO` und `PERSON_FRIEND` gehören zum geplanten Zielmodell, werden vom aktuellen Import
-aber nicht angelegt. Die übrigen Tabellen sind in PostgreSQL vorhanden.
+aber nicht angelegt. Die übrigen Tabellen sind in PostgreSQL vorhanden. Die Aussagen vom
+28.8. zu Fotos und Freundschaften beschreiben den Entwurf, nicht bereits gespeicherte Daten.
 
 ```mermaid
 erDiagram
@@ -227,7 +228,8 @@ Ergänzungen am Modell sind gesondert datiert.
   Schnittstelle getrennt.
 - Der Ablauf ist: Excel und MongoDB lesen, Profile und Beziehungen zusammenführen,
   Hobby-XML ergänzen, PostgreSQL neu aufbauen, Transferpaket einspielen und Views anlegen.
-  Die Java Records in `model` reichen die Daten zwischen diesen Schritten weiter.
+  Die Java Records in `domain.model` reichen die fachlichen Daten zwischen diesen Schritten weiter.
+  MongoDB-spezifische Records liegen getrennt davon in `source.mongo.model`.
 
 Zum Nachvollziehen im Code:
 
@@ -235,10 +237,18 @@ Zum Nachvollziehen im Code:
 | --- | --- |
 | [`Main`](../src/main/java/org/encoway/Main.java) / [`MigrationRunner`](../src/main/java/org/encoway/migration/application/MigrationRunner.java) | Einstieg, Startargument und Reihenfolge des Imports. |
 | [`source`](../src/main/java/org/encoway/migration/source) | Excel, MongoDB und XML lesen und in Java-Daten umwandeln. |
-| [`assembly`](../src/main/java/org/encoway/migration/assembly) | Profilkonflikte lösen und E-Mail-Verweise auf Personen-IDs abbilden. |
+| [`application.assembly`](../src/main/java/org/encoway/migration/application/assembly) | Profilkonflikte lösen und E-Mail-Verweise auf Personen-IDs abbilden. |
+| [`domain.model`](../src/main/java/org/encoway/migration/domain/model) | Fachliche Datenmodelle für die Migration, ohne MongoDB-spezifische Records. |
+| [`source.mongo.model`](../src/main/java/org/encoway/migration/source/mongo/model) | MongoDB-Profile, Likes, Nachrichten und deren gemeinsamer Datencontainer. |
 | [`DatabaseMigrator`](../src/main/java/org/encoway/migration/target/postgres/DatabaseMigrator.java) | Transaktion, Neuaufbau und Schreiben über die Tabellen-Writer. Ruft auch die Transferpaket-Verarbeitung auf. |
 | [`SchemaDefinition`](../src/main/java/org/encoway/migration/target/postgres/SchemaDefinition.java) / [`MigrationViews`](../src/main/java/org/encoway/migration/target/postgres/MigrationViews.java) | Tatsächlich angelegte Tabellen, Regeln und Views. Hier steht auch die DDL. |
 
+- Seit dem letzten Commit haben wir die Package-Struktur aufgeteilt. `assembly` gehört jetzt
+   zu `application`, fachliche Modelle und MongoDB-Modelle liegen nicht mehr zusammen.
+   Die Tests sind entsprechend mit umgezogen. Der Diff enthält nur Verschiebungen und angepasste
+   Packages, Imports und Klassenverweise. Fachliche Logik, SQL und Datenverträge bleiben gleich.
+   `target.postgres` verwendet weiterhin `source.transfer`. Diese Abhängigkeit und die Aufteilung
+   des `TransferPackageProcessor` haben wir bei diesem Refactoring nicht verändert.
 - Jeder Lauf löscht und erstellt die vom Import verwalteten Tabellen und Views neu,
   einschließlich der Ablehnungen. Das ist ein vollständiger Neuaufbau, kein Update eines
   laufenden Bestands. Manuelle Änderungen in diesen Tabellen gehen bei erfolgreichem Import verloren.
@@ -270,14 +280,54 @@ Zum Nachvollziehen im Code:
 - Unser [Zielmodell](#zielmodell) ist direkt in dieser Befundnotiz hinterlegt und heute ergänzt.
   Dieser interne Link ersetzt nicht die geforderte ERD-Share-URL aus der Modellierungsstation.
   Die Share-URL liegt hier noch nicht vor.
-- Es sind keine Fotos geliefert oder in `profile_image` hinterlegt. Deshalb importieren wir
-  keine Bilder und erfinden keine Platzhalter. Die Kundinnen-App hat außerdem keine Foto-
-  oder Freundeslistenanzeige. Das ist getrennt von den noch nicht angelegten Tabellen
-  `PHOTO` und `PERSON_FRIEND` zu betrachten.
+- Wir haben den Datenbestand nochmals angesehen. Alle 1.576 MongoDB-Dokumente besitzen ein
+  leeres `friends`-Array. Foto-, Bild- oder Avatar-Felder sind nicht vorhanden. In PostgreSQL
+  sind bei 1.577 Personen keine Werte in `profile_image` hinterlegt. Deshalb importieren wir
+  keine Bilder oder Freundschaften und erfinden keine Platzhalter.
+  Mit leeren Beziehungen sind hier die Freundeslisten gemeint. Die 500 Likes und
+  300 Nachrichten sind vorhanden und werden übernommen.
+  `PHOTO` und `PERSON_FRIEND` fehlen weiterhin als Tabellen. Leere Quelldaten erklären den
+  fehlenden Import, ersetzen aber nicht den Modellierungsauftrag aus der README.
 - Der Container-Verlauf enthält bereits erfolgreiche CLI-Abschlüsse für V2 vom 02.09.2026
   und V3 vom 03.09.2026. Bei V3 wurde auch der Snapshot-Vergleich zur Idempotenz bestanden.
   Die vorherige Aussage zum fehlenden V3-Nachweis war falsch. Der Verlauf liegt im App-Container
   in `/data/check-history.jsonl`, der Vergleichsstand in `/data/v3-snapshot.json`.
+
+#### Erneuter V3-Lauf am 09.09.2026
+
+- Wir haben das Schema `public` geleert und den vollständigen Import neu ausgeführt.
+  Beim ersten Versuch wurde versehentlich der Ordnername als Startargument übergeben.
+  Dadurch passten die Ablehnungspfade nicht zum Manifest. Nach dem Start mit
+  `/transferpack/records/` waren die fachlichen Prüfungen grün. Dafür war keine Codeänderung nötig.
+- Anschließend haben wir einen Snapshot gespeichert, den vollständigen Import erneut ausgeführt
+  und den neuen Stand verglichen. Der CLI-Lauf um 11:16 Uhr hat das V3-Gate mit Exit-Code `0`
+  bestanden. Alle sechs Vertrags-Views waren nach dem zweiten Lauf mengen- und wertgleich.
+  Der aktuelle Snapshot liegt in `/data/v3-repro-snapshot.json` im gemeinsamen App-Volume.
+- Unser Zweitlauf baut die Tabellen erneut auf. Der Vergleich belegt damit einen reproduzierbaren
+  Gesamtimport. Ein zusätzlicher Packimport in einen unveränderten Bestand ohne Neuaufbau wurde
+  damit nicht separat nachgewiesen.
+- Der spätere Live-Lauf der Kundinnen-App zeigt die fachlichen Prüfungen ebenfalls grün,
+  bewertet aber keinen Snapshotvergleich. Sein Hinweis zur Idempotenz ist kein fehlgeschlagener
+  CLI-Abschluss. Beim Java-Import erscheinen weiterhin Meldungen über fehlende Log4j- und
+  SLF4J-Logging-Anbindungen. Das V3-Gate ist bestanden, vollständig meldungsfrei ist der Import nicht.
+
+Zum Wiederholen starten wir die Dienste mit `docker compose up -d` und führen
+[`Main`](../src/main/java/org/encoway/Main.java) mit Java 21, den Maven-Abhängigkeiten und dem
+einzigen Programmargument `/transferpack/records/` aus dem Projektverzeichnis aus.
+Vor dem ersten Import leeren wir `public` wie in der
+[README](../readme.md#abschluss-von-akt-1-neuaufbau-prüfen) beschrieben.
+Danach speichern wir den Snapshot:
+
+```powershell
+docker compose run --rm -e CONTRACT_VERSION=V3 kundinnen_app node server/dist/cli.js --snapshot-out /data/v3-repro-snapshot.json
+```
+
+Nun starten wir `Main` mit demselben Argument erneut. Erst nach diesem zweiten Import folgt
+der Vergleich, ohne den Snapshot dazwischen zu überschreiben:
+
+```powershell
+docker compose run --rm -e CONTRACT_VERSION=V3 kundinnen_app node server/dist/cli.js --snapshot-compare /data/v3-repro-snapshot.json
+```
 
 #### Quellmodell und Umsetzung
 
@@ -288,7 +338,7 @@ Zum Nachvollziehen im Code:
 | Quelle | Gespeicherte Struktur und Umsetzung |
 | --- | --- |
 | [Excel-Datei](../Lets%20Meet%20DB%20Dump.xlsx) | Erstes Blatt, erste Zeile als Kopf. Acht Spalten für Name, Adresse, Telefon, Hobbys, E-Mail, Geschlecht, Interessen und Geburtsdatum. Die Spaltenzuordnung und Zerlegung stehen im [ExcelRowMapper](../src/main/java/org/encoway/migration/source/excel/ExcelRowMapper.java). |
-| MongoDB `LetsMeet.users` | Ein BSON-Dokument je Person. `_id` ist die E-Mail und der eindeutige Schlüssel. `_id`, `name` und `phone` sind Strings. `likes`, `messages` und `friends` sind Arrays. Eingelesen wird über den [MongoDataReader](../src/main/java/org/encoway/migration/source/mongo/MongoDataReader.java) in [MongoData](../src/main/java/org/encoway/migration/model/MongoData.java) und die darin verwendeten Records. |
+| MongoDB `LetsMeet.users` | Ein BSON-Dokument je Person. `_id` ist die E-Mail und der eindeutige Schlüssel. `_id`, `name` und `phone` sind Strings. `likes`, `messages` und `friends` sind Arrays. Eingelesen wird über den [MongoDataReader](../src/main/java/org/encoway/migration/source/mongo/MongoDataReader.java) in [MongoData](../src/main/java/org/encoway/migration/source/mongo/model/MongoData.java) und die darin verwendeten Records. |
 | [Hobby-XML](../Lets_Meet_Hobbies.xml) | `user`-Elemente mit `email` und mehreren `hobby`-Texten. Die Zuordnung zu vorhandenen Personen und die Deduplizierung stehen im [HobbyXmlReader](../src/main/java/org/encoway/migration/source/xml/HobbyXmlReader.java). |
 | [Transferpaket](../letsmeet-transfer-v3) | XML-Datensätze für Likes, Hobbys und Profile. Dateinamen und Datensatzverweise stehen im [Manifest](../letsmeet-transfer-v3/manifest.json). Die Feldprüfung steht im [TransferPackageProcessor](../src/main/java/org/encoway/migration/source/transfer/TransferPackageProcessor.java). |
 

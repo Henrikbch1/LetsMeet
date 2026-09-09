@@ -1,6 +1,6 @@
 package org.encoway.migration.target.postgres;
 
-import org.encoway.migration.model.Person;
+import org.encoway.migration.domain.model.Person;
 
 import java.sql.Connection;
 import java.sql.SQLException;

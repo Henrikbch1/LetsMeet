@@ -1,7 +1,7 @@
 package org.encoway.migration.target.postgres;
 
-import org.encoway.migration.model.PersonInterest;
-import org.encoway.migration.model.RawInterest;
+import org.encoway.migration.domain.model.PersonInterest;
+import org.encoway.migration.domain.model.RawInterest;
 
 import java.sql.Connection;
 import java.sql.SQLException;

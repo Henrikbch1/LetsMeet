@@ -1,6 +1,6 @@
 package org.encoway.migration.source.excel;
 
-import org.encoway.migration.model.Hobby;
+import org.encoway.migration.domain.model.Hobby;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

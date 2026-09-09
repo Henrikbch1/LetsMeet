@@ -1,8 +1,8 @@
 package org.encoway.migration.source.excel;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.encoway.migration.model.City;
-import org.encoway.migration.model.Hobby;
+import org.encoway.migration.domain.model.City;
+import org.encoway.migration.domain.model.Hobby;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -30,12 +30,12 @@ class ExcelDataReaderTest {
 
         // Assert
         assertThat(result.people()).extracting(
-                        org.encoway.migration.model.Person::personId,
-                        org.encoway.migration.model.Person::lastName,
-                        org.encoway.migration.model.Person::firstName,
-                        org.encoway.migration.model.Person::streetNumber,
-                        org.encoway.migration.model.Person::cityId,
-                        org.encoway.migration.model.Person::genderId)
+                        org.encoway.migration.domain.model.Person::personId,
+                        org.encoway.migration.domain.model.Person::lastName,
+                        org.encoway.migration.domain.model.Person::firstName,
+                        org.encoway.migration.domain.model.Person::streetNumber,
+                        org.encoway.migration.domain.model.Person::cityId,
+                        org.encoway.migration.domain.model.Person::genderId)
                 .containsExactly(
                         tuple(1, "Doe", "Jane", "12", 1, 2),
                         tuple(2, "Roe", "John", "12", 1, 1));
@@ -44,8 +44,8 @@ class ExcelDataReaderTest {
         assertThat(result.hobbies()).containsExactly(
                 new Hobby(1, 1, "Reading", 3, "excel"));
         assertThat(result.rawInterests()).extracting(
-                        org.encoway.migration.model.RawInterest::personId,
-                        org.encoway.migration.model.RawInterest::interestCode)
+                        org.encoway.migration.domain.model.RawInterest::personId,
+                        org.encoway.migration.domain.model.RawInterest::interestCode)
                 .containsExactly(
                         tuple(1, "m"),
                         tuple(1, "w"));

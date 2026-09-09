@@ -1,4 +1,4 @@
-package org.encoway.migration.model;
+package org.encoway.migration.source.mongo.model;
 
 /**
  * Profile data read from a single MongoDB {@code users} document, before it is merged

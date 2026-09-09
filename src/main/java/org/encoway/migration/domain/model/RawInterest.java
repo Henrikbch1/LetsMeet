@@ -1,4 +1,4 @@
-package org.encoway.migration.model;
+package org.encoway.migration.domain.model;
 
 /**
  * A raw interest code row for one person, such as {@code "m"}, {@code "w"} or

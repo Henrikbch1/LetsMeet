@@ -1,4 +1,4 @@
-package org.encoway.migration.assembly;
+package org.encoway.migration.application.assembly;
 
 /**
  * Strategy for resolving profile field conflicts between the Excel source and the

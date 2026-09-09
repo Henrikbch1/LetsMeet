@@ -1,4 +1,4 @@
-package org.encoway.migration.model;
+package org.encoway.migration.domain.model;
 
 /**
  * A single rejected physical record from a data delivery, kept for auditability. The

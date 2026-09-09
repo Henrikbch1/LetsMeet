@@ -1,10 +1,10 @@
 package org.encoway.migration.source.transfer;
 
-import org.encoway.migration.model.City;
-import org.encoway.migration.model.Hobby;
-import org.encoway.migration.model.MigrationData;
-import org.encoway.migration.model.MigrationRejection;
-import org.encoway.migration.model.Person;
+import org.encoway.migration.domain.model.City;
+import org.encoway.migration.domain.model.Hobby;
+import org.encoway.migration.domain.model.MigrationData;
+import org.encoway.migration.domain.model.MigrationRejection;
+import org.encoway.migration.domain.model.Person;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

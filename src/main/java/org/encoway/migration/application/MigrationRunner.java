@@ -1,9 +1,9 @@
 package org.encoway.migration.application;
 
-import org.encoway.migration.assembly.MigrationDataAssembler;
-import org.encoway.migration.model.Hobby;
-import org.encoway.migration.model.MigrationData;
-import org.encoway.migration.model.MongoData;
+import org.encoway.migration.application.assembly.MigrationDataAssembler;
+import org.encoway.migration.domain.model.Hobby;
+import org.encoway.migration.domain.model.MigrationData;
+import org.encoway.migration.source.mongo.model.MongoData;
 import org.encoway.migration.source.excel.ExcelDataReader;
 import org.encoway.migration.source.mongo.MongoDataReader;
 import org.encoway.migration.source.xml.HobbyXmlReader;

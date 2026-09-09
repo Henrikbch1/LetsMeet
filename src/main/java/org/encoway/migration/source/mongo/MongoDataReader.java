@@ -5,10 +5,10 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import org.encoway.migration.model.MongoData;
-import org.encoway.migration.model.MongoLike;
-import org.encoway.migration.model.MongoMessage;
-import org.encoway.migration.model.MongoProfile;
+import org.encoway.migration.source.mongo.model.MongoData;
+import org.encoway.migration.source.mongo.model.MongoLike;
+import org.encoway.migration.source.mongo.model.MongoMessage;
+import org.encoway.migration.source.mongo.model.MongoProfile;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

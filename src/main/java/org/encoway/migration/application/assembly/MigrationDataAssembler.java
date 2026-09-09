@@ -1,10 +1,10 @@
-package org.encoway.migration.assembly;
+package org.encoway.migration.application.assembly;
 
-import org.encoway.migration.model.MigrationData;
-import org.encoway.migration.model.MongoData;
-import org.encoway.migration.model.Person;
-import org.encoway.migration.model.PersonLike;
-import org.encoway.migration.model.PersonMessage;
+import org.encoway.migration.domain.model.MigrationData;
+import org.encoway.migration.domain.model.Person;
+import org.encoway.migration.domain.model.PersonLike;
+import org.encoway.migration.domain.model.PersonMessage;
+import org.encoway.migration.source.mongo.model.MongoData;
 
 import java.util.ArrayList;
 import java.util.List;

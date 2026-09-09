@@ -1,4 +1,4 @@
-package org.encoway.migration.model;
+package org.encoway.migration.source.mongo.model;
 
 import java.time.LocalDateTime;
 

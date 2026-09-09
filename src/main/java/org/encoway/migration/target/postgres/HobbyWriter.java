@@ -1,6 +1,6 @@
 package org.encoway.migration.target.postgres;
 
-import org.encoway.migration.model.Hobby;
+import org.encoway.migration.domain.model.Hobby;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

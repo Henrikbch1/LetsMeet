@@ -1,7 +1,7 @@
 package org.encoway.migration.target.postgres;
 
-import org.encoway.migration.model.City;
-import org.encoway.migration.model.Gender;
+import org.encoway.migration.domain.model.City;
+import org.encoway.migration.domain.model.Gender;
 
 import java.sql.Connection;
 import java.sql.SQLException;

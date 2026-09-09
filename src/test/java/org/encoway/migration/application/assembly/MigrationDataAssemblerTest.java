@@ -1,16 +1,16 @@
-package org.encoway.migration.assembly;
+package org.encoway.migration.application.assembly;
 
-import org.encoway.migration.model.City;
-import org.encoway.migration.model.Gender;
-import org.encoway.migration.model.Hobby;
-import org.encoway.migration.model.MigrationData;
-import org.encoway.migration.model.MongoData;
-import org.encoway.migration.model.MongoLike;
-import org.encoway.migration.model.MongoMessage;
-import org.encoway.migration.model.MongoProfile;
-import org.encoway.migration.model.Person;
-import org.encoway.migration.model.PersonLike;
-import org.encoway.migration.model.PersonMessage;
+import org.encoway.migration.domain.model.City;
+import org.encoway.migration.domain.model.Gender;
+import org.encoway.migration.domain.model.Hobby;
+import org.encoway.migration.domain.model.MigrationData;
+import org.encoway.migration.domain.model.Person;
+import org.encoway.migration.domain.model.PersonLike;
+import org.encoway.migration.domain.model.PersonMessage;
+import org.encoway.migration.source.mongo.model.MongoData;
+import org.encoway.migration.source.mongo.model.MongoLike;
+import org.encoway.migration.source.mongo.model.MongoMessage;
+import org.encoway.migration.source.mongo.model.MongoProfile;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
