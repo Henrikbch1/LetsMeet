@@ -19,19 +19,16 @@ public class HobbyParser {
         Set<String> seenDescriptions = new LinkedHashSet<>();
         int hobbyId = firstHobbyId;
         for (String hobbyValue : hobbyValues.split(HOBBY_DELIMITER)) {
-            if (hobbyValue.isBlank()) {
-                continue;
+            if (!hobbyValue.isBlank()) {
+                int priorityStart = hobbyValue.lastIndexOf(PRIORITY_MARKER);
+                int descriptionEnd = hobbyValue.lastIndexOf(PRIORITY_MARKER, priorityStart - 1);
+                String description = hobbyValue.substring(0, descriptionEnd).strip();
+                int priority = Integer.parseInt(
+                        hobbyValue.substring(descriptionEnd + 1, priorityStart).strip());
+                if (seenDescriptions.add(description)) {
+                    hobbies.add(new Hobby(hobbyId++, personId, description, priority, SOURCE_EXCEL));
+                }
             }
-
-            int priorityStart = hobbyValue.lastIndexOf(PRIORITY_MARKER);
-            int descriptionEnd = hobbyValue.lastIndexOf(PRIORITY_MARKER, priorityStart - 1);
-            String description = hobbyValue.substring(0, descriptionEnd).strip();
-            int priority = Integer.parseInt(hobbyValue.substring(descriptionEnd + 1, priorityStart).strip());
-            if (!seenDescriptions.add(description)) {
-                // Same hobby fact for this person/source already recorded; keep only the first occurrence.
-                continue;
-            }
-            hobbies.add(new Hobby(hobbyId++, personId, description, priority, SOURCE_EXCEL));
         }
         return hobbies;
     }

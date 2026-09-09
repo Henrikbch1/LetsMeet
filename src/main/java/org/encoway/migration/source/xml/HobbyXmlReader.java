@@ -56,22 +56,17 @@ public class HobbyXmlReader {
         for (int i = 0; i < userNodes.getLength(); i++) {
             Element userElement = (Element) userNodes.item(i);
             Integer personId = resolvePersonId(userElement, personIdByLowerEmail);
-            if (personId == null) {
-                continue;
-            }
-            NodeList hobbyNodes = userElement.getElementsByTagName(HOBBY_TAG);
-            for (int j = 0; j < hobbyNodes.getLength(); j++) {
-                String description = hobbyNodes.item(j).getTextContent().strip();
-                if (description.isEmpty()) {
-                    continue;
+            if (personId != null) {
+                NodeList hobbyNodes = userElement.getElementsByTagName(HOBBY_TAG);
+                for (int j = 0; j < hobbyNodes.getLength(); j++) {
+                    String description = hobbyNodes.item(j).getTextContent().strip();
+                    if (!description.isEmpty()) {
+                        PersonHobbyKey key = new PersonHobbyKey(personId, description);
+                        if (seenFacts.add(key)) {
+                            newHobbies.add(new Hobby(nextHobbyId++, personId, description, null, SOURCE_XML));
+                        }
+                    }
                 }
-                PersonHobbyKey key = new PersonHobbyKey(personId, description);
-                if (!seenFacts.add(key)) {
-                    // Same person/hobby fact already recorded by Excel or an earlier XML entry;
-                    // the existing assignment wins and this one is not duplicated.
-                    continue;
-                }
-                newHobbies.add(new Hobby(nextHobbyId++, personId, description, null, SOURCE_XML));
             }
         }
         return newHobbies;
