@@ -30,8 +30,12 @@ class ExcelDataReaderTest {
 
         // Assert
         assertThat(result.people()).extracting(
-                        person -> person.personId(), person -> person.lastName(), person -> person.firstName(),
-                        person -> person.streetNumber(), person -> person.cityId(), person -> person.genderId())
+                        org.encoway.migration.model.Person::personId,
+                        org.encoway.migration.model.Person::lastName,
+                        org.encoway.migration.model.Person::firstName,
+                        org.encoway.migration.model.Person::streetNumber,
+                        org.encoway.migration.model.Person::cityId,
+                        org.encoway.migration.model.Person::genderId)
                 .containsExactly(
                         tuple(1, "Doe", "Jane", "12", 1, 2),
                         tuple(2, "Roe", "John", "12", 1, 1));
@@ -40,7 +44,8 @@ class ExcelDataReaderTest {
         assertThat(result.hobbies()).containsExactly(
                 new Hobby(1, 1, "Reading", 3, "excel"));
         assertThat(result.rawInterests()).extracting(
-                        interest -> interest.personId(), interest -> interest.interestCode())
+                        org.encoway.migration.model.RawInterest::personId,
+                        org.encoway.migration.model.RawInterest::interestCode)
                 .containsExactly(
                         tuple(1, "m"),
                         tuple(1, "w"));

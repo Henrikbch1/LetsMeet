@@ -72,8 +72,9 @@ class TransferPackageProcessorTest {
                 .containsExactlyInAnyOrder(
                         tuple(ENCODING_MOJIBAKE_FILE, "/transferpack/records/profile[1]"));
         assertThat(result.pendingProfiles())
-                .filteredOn(profile -> profile.source().equals(ENCODING_MOJIBAKE_FILE))
-                .extracting(profile -> profile.person().firstName())
+                .filteredOn(this::isMojibakeProfile)
+                .extracting(TransferPackageProcessor.PendingProfile::person)
+                .extracting(Person::firstName)
                 .containsExactly("Müller");
 
         assertThat(result.rejections())
@@ -85,7 +86,7 @@ class TransferPackageProcessorTest {
                         tuple(CHANGE_REQUEST_FILE, "/transferpack/records/hobby[4]"),
                         tuple(CHANGE_REQUEST_FILE, "/transferpack/records/profile[1]"),
                         tuple(ENCODING_INVALID_FILE, "/transferpack/records/profile[1]"));
-        assertThat(result.rejections()).allSatisfy(rejection -> assertThat(rejection.reason()).isNotBlank());
+        assertThat(result.rejections()).allSatisfy(this::assertReasonIsNotBlank);
     }
 
     @Test
@@ -187,9 +188,20 @@ class TransferPackageProcessorTest {
         assertThat(result.rejections()).isEmpty();
         assertThat(result.pendingProfiles()).extracting(TransferPackageProcessor.PendingProfile::newCity)
                 .containsExactly(true, false);
-        assertThat(result.pendingProfiles()).extracting(profile -> profile.city().cityId())
+        assertThat(result.pendingProfiles())
+                .extracting(TransferPackageProcessor.PendingProfile::city)
+                .extracting(City::cityId)
                 .containsExactly(1, 1);
     }
+
+    private boolean isMojibakeProfile(TransferPackageProcessor.PendingProfile profile) {
+        return profile.source().equals(ENCODING_MOJIBAKE_FILE);
+    }
+
+    private void assertReasonIsNotBlank(MigrationRejection rejection) {
+        assertThat(rejection.reason()).isNotBlank();
+    }
+
     private void writeInvalidEncodingProfile(Path packageDir) throws IOException {
         // Genuinely malformed UTF-8 (a lone 0xE9 byte, not a valid continuation), so the lenient
         // decode must turn it into a U+FFFD replacement character.
