@@ -14,7 +14,7 @@ import java.util.List;
 
 public class MigrationRunner {
 
-    public void run() {
+    public void run(String recordsPathPrefix) {
         MigrationData excelData = new ExcelDataReader().readMigrationData();
         MongoData mongoData = new MongoDataReader().readMongoData();
         MigrationData migrationData = new MigrationDataAssembler().assemble(excelData, mongoData);
@@ -34,6 +34,6 @@ public class MigrationRunner {
                 migrationData.personMessages()
         );
 
-        new DatabaseMigrator().migrate(enrichedData);
+        new DatabaseMigrator(recordsPathPrefix).migrate(enrichedData);
     }
 }

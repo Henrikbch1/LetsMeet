@@ -32,26 +32,34 @@ public class DatabaseMigrator {
     private final InterestWriter interestWriter = new InterestWriter();
     private final SocialActivityWriter socialActivityWriter = new SocialActivityWriter();
     private final RejectionWriter rejectionWriter = new RejectionWriter();
-    private final TransferPackageProcessor transferPackageProcessor = new TransferPackageProcessor();
+    private final TransferPackageProcessor transferPackageProcessor;
+
+    public DatabaseMigrator(String recordsPathPrefix) {
+        this.transferPackageProcessor = new TransferPackageProcessor(recordsPathPrefix);
+    }
 
     public void migrate(MigrationData migrationData) {
         try (Connection connection = DatabaseConfig.openConnection()) {
-            boolean autoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
-            try {
-                resetSchema(connection);
-                importData(connection, migrationData);
-                applyTransferPackage(connection, migrationData);
-                migrationViews.createMigrationViews(connection);
-                connection.commit();
-            } catch (SQLException | RuntimeException exception) {
-                rollback(connection, exception);
-                throw exception;
-            } finally {
-                connection.setAutoCommit(autoCommit);
-            }
+            migrateWithinTransaction(connection, migrationData);
         } catch (SQLException exception) {
             throw new RuntimeException("Could not migrate the LetsMeet database.", exception);
+        }
+    }
+
+    private void migrateWithinTransaction(Connection connection, MigrationData migrationData) throws SQLException {
+        boolean autoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try {
+            resetSchema(connection);
+            importData(connection, migrationData);
+            applyTransferPackage(connection, migrationData);
+            migrationViews.createMigrationViews(connection);
+            connection.commit();
+        } catch (SQLException | RuntimeException exception) {
+            rollback(connection, exception);
+            throw exception;
+        } finally {
+            connection.setAutoCommit(autoCommit);
         }
     }
 

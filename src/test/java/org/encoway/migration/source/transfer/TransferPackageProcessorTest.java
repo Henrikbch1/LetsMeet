@@ -23,8 +23,9 @@ class TransferPackageProcessorTest {
     private static final String CHANGE_REQUEST_FILE = "change-request.xml";
     private static final String ENCODING_INVALID_FILE = "encoding-invalid.xml";
     private static final String ENCODING_MOJIBAKE_FILE = "encoding-mojibake.xml";
+    private static final String RECORDS_PATH_PREFIX = "/transferpack/records/";
 
-    private final TransferPackageProcessor underTest = new TransferPackageProcessor();
+    private final TransferPackageProcessor underTest = new TransferPackageProcessor(RECORDS_PATH_PREFIX);
 
     @Test
     void process_appliesTheFullEightRecordTransferV3Matrix(@TempDir Path packageDir) throws IOException {
@@ -119,6 +120,28 @@ class TransferPackageProcessorTest {
         assertThat(result.rejections())
                 .extracting(MigrationRejection::sourceRef)
                 .containsExactly("/transferpack/records/hobby[3]");
+    }
+
+    @Test
+    void process_usesCustomRecordsPathPrefix(@TempDir Path packageDir) throws IOException {
+        // Arrange
+        writeXml(packageDir, CHANGE_REQUEST_FILE, """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <transferpack><records><like email="missing@example.com" target_email="also-missing@example.com"/></records></transferpack>
+                """);
+        writeEmptyProfileFile(packageDir, ENCODING_INVALID_FILE);
+        writeEmptyProfileFile(packageDir, ENCODING_MOJIBAKE_FILE);
+        TransferPackageProcessor customProcessor = new TransferPackageProcessor("/custom/transfer-records/");
+        MigrationData migrationData = new MigrationData(
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), List.of());
+
+        // Act
+        TransferPackageProcessor.Result result = customProcessor.process(packageDir, migrationData);
+
+        // Assert
+        assertThat(result.rejections())
+                .extracting(MigrationRejection::sourceRef)
+                .containsExactly("/custom/transfer-records/like[1]");
     }
 
     @Test

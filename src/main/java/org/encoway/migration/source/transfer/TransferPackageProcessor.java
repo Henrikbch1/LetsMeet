@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -55,8 +56,6 @@ public class TransferPackageProcessor {
     private static final String LIKE_TAG = "like";
     private static final String HOBBY_TAG = "hobby";
     private static final String PROFILE_TAG = "profile";
-    private static final String RECORDS_PATH_PREFIX = "/transferpack/records/";
-
     private static final String ATTRIBUTE_EMAIL = "email";
     private static final String ATTRIBUTE_TARGET_EMAIL = "target_email";
     private static final String ATTRIBUTE_NAME = "name";
@@ -92,6 +91,17 @@ public class TransferPackageProcessor {
     private static final DateTimeFormatter GERMAN_DATE_FORMAT = DateTimeFormatter
             .ofPattern("dd.MM.uuuu", Locale.ROOT).withResolverStyle(ResolverStyle.STRICT);
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    private final String recordsPathPrefix;
+
+    /**
+     * Creates a processor that uses the supplied path prefix for transfer record references.
+     *
+     * @param recordsPathPrefix the path prefix for transfer record references
+     */
+    public TransferPackageProcessor(String recordsPathPrefix) {
+        this.recordsPathPrefix = Objects.requireNonNull(recordsPathPrefix, "recordsPathPrefix");
+    }
 
     public Result process(MigrationData migrationData) {
         return process(DEFAULT_DIRECTORY, migrationData);
@@ -300,7 +310,7 @@ public class TransferPackageProcessor {
     }
 
     private String recordPath(String tagName, int index) {
-        return RECORDS_PATH_PREFIX + tagName + "[" + index + "]";
+        return recordsPathPrefix + tagName + "[" + index + "]";
     }
 
     private List<Element> directChildElements(Document document, String parentTagName) {
